@@ -12,7 +12,7 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 ## What works today
 
 - FastAPI backend with structured logging, CORS, `/api/v1/health`, `/api/v1/ready`, and `/api/v1/settings`
-- Bitbucket Data Center 10.2 client (`/api/bitbucket/health`, `/projects`, `/projects/{projectKey}/repos`)
+- Bitbucket Data Center 10.2 client for projects, repositories, and pull requests
 - React + Vite + TypeScript dashboard with sidebar, top navigation, and seven workspace pages
 - Environment-based configuration (Pydantic Settings)
 - AI provider **interfaces** for Amazon Bedrock and Strands Agents (stubs)
@@ -23,8 +23,8 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 
 | Capability | Status |
 | --- | --- |
-| Bitbucket REST (projects, repos) | Data Center 10.2.x |
-| Pull request ingestion | Not started |
+| Bitbucket REST (projects, repos, PRs) | Data Center 10.2.x |
+| Pull request list and detail UI | Live |
 | PR deep analysis | Not started |
 | Bamboo build ingestion | Not started |
 | Production investigation | Not started |
@@ -129,7 +129,7 @@ Copy `.env.example` to `.env`. Important variables:
 | --- | --- | --- |
 | Dashboard | `/` | Platform health and foundation status |
 | Repositories | `/repositories` | Bitbucket project and repository discovery |
-| Pull Requests | `/pull-requests` | PR inbox (placeholder) |
+| Pull Requests | `/pull-requests` | Open, merged, and declined PRs |
 | PR Deep Analysis | `/pr-analysis` | AI-assisted review (placeholder) |
 | Bamboo Builds | `/bamboo` | CI build intelligence (placeholder) |
 | Production Investigation | `/production` | Incident investigation (placeholder) |

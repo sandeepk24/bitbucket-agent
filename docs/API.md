@@ -58,6 +58,16 @@ Paged Bitbucket project discovery, flattened into one list.
 
 Repositories in a project, including the HTTP clone URL when Bitbucket returns one.
 
+### GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests
+
+Query: `state=OPEN|MERGED|DECLINED|ALL` (default `OPEN`).
+
+Each item includes author, reviewers, approval counts, and source/destination branches.
+
+### GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
+
+Bundles the PR, its commits, and changed files. Reviewer `status` is `APPROVED`, `UNAPPROVED`, or `NEEDS_WORK`.
+
 | Status | Meaning |
 | --- | --- |
 | 200 | Success |

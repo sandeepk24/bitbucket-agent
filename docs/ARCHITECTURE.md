@@ -9,7 +9,7 @@ Bitbucket Agent is an enterprise DevOps intelligence console for Bitbucket Data 
 │  TanStack Query             │     │  /api/bitbucket/health           │
 └─────────────────────────────┘     │  /api/bitbucket/projects         │
                                     │  /api/bitbucket/.../repos        │
-                                    │                                  │
+                                    │  /api/bitbucket/.../pull-requests│
                                     │  providers/                      │
                                     │    bitbucket  (DC 10.2 REST)     │
                                     │    bamboo     (stub)             │
@@ -25,9 +25,9 @@ Bitbucket Agent is an enterprise DevOps intelligence console for Bitbucket Data 
 
 | Layer | Responsibility | Out of scope |
 | --- | --- | --- |
-| Frontend | Layout, routing, project/repo browse | PR analysis, Bamboo, AI |
+| Frontend | Layout, routing, project/repo/PR browse | PR analysis, Bamboo, AI |
 | API | Process health plus Bitbucket discovery | Inference |
-| Bitbucket client | PAT auth, retries, pagination | Cloud REST, PR APIs |
+| Bitbucket client | PAT auth, retries, pagination, PRs | Cloud REST |
 | AI providers | Typed interfaces | InvokeModel / Strands runtime |
 
 Tokens stay in process environment. They are never logged or returned on API responses.

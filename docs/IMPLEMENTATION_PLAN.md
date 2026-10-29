@@ -17,7 +17,7 @@
 - [x] Authenticated Bitbucket Data Center REST client (HTTP access tokens)
 - [x] Project and repository discovery APIs
 - [x] Frontend repository browser
-- [ ] Pull request list/detail APIs
+- [x] Pull request list/detail APIs and UI
 
 ## Milestone 3 — PR intelligence and Bamboo
 
