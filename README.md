@@ -4,6 +4,7 @@ Enterprise DevOps intelligence for Bitbucket repositories, pull requests, Bamboo
 
 This repository is the **foundation**: a runnable React + FastAPI app, Docker Compose, health checks, and typed provider boundaries. Bitbucket API calls, Bamboo ingestion, and model inference are **not implemented yet**.
 
+**Repo:** https://github.com/sandeepk24/bitbucket-agent  
 **Author:** [sandeepk24](https://github.com/sandeepk24)
 
 ---
