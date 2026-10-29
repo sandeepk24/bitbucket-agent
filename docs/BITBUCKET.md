@@ -35,6 +35,9 @@ The client never logs `Authorization` headers or token values.
 | Get a pull request | GET | `/rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}` | Compatible |
 | PR commits | GET | `.../pull-requests/{pullRequestId}/commits` | Compatible |
 | PR file changes | GET | `.../pull-requests/{pullRequestId}/changes` | Compatible |
+| PR merge-base | GET | `.../pull-requests/{pullRequestId}/merge-base` | Compatible |
+| PR diff | GET | `.../pull-requests/{pullRequestId}/diff[/{path}]?sinceId=&untilId=` | Compatible |
+| Raw file at revision | GET | `/rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/raw/{path}?at={sha}` | Compatible |
 
 Paging uses the documented page envelope: `values`, `isLastPage`, `nextPageStart`.
 
@@ -49,8 +52,12 @@ Personal projects use a `~` key prefix (`~jsmith`), which the client allows.
 | `GET /api/bitbucket/projects/{projectKey}/repos` | `projects/{projectKey}/repos` (all pages) |
 | `GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests` | `pull-requests?state=` (all pages) |
 | `GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{id}` | PR + `/commits` + `/changes` |
+| `GET .../pull-requests/{id}/comparison` | merge-base + PR + `/commits` + `/changes` + `/diff?sinceId=&untilId=` |
+| `GET .../pull-requests/{id}/comparison/file` | `/raw/{path}?at={sha}` at locked base and head SHAs |
 
 `state` accepts `OPEN`, `MERGED`, `DECLINED`, or `ALL`. Reviewers and approval status (`APPROVED`, `UNAPPROVED`, `NEEDS_WORK`) are taken from the PR `reviewers` array. Source and destination branches are `fromRef.displayId` and `toRef.displayId`.
+
+Comparisons always pin `at`, `sinceId`, and `untilId` to commit SHAs. If merge-base is missing, the oldest PR commit parent is used. Binary, oversized (`BITBUCKET_MAX_FILE_BYTES`), and truncated diffs are returned as flags rather than guessed text.
 
 `compatible` on health is `true` when the remote version starts with `10.2.`.
 

@@ -18,6 +18,7 @@
 - [x] Project and repository discovery APIs
 - [x] Frontend repository browser
 - [x] Pull request list/detail APIs and UI
+- [x] PR before/after comparison (SHA-locked diffs, Monaco split/inline)
 
 ## Milestone 3 — PR intelligence and Bamboo
 

@@ -68,6 +68,16 @@ Each item includes author, reviewers, approval counts, and source/destination br
 
 Bundles the PR, its commits, and changed files. Reviewer `status` is `APPROVED`, `UNAPPROVED`, or `NEEDS_WORK`.
 
+### GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comparison
+
+Resolves immutable base and head SHAs (merge-base and `fromRef.latestCommit`), then lists changed files with addition/deletion counts and changed line numbers. Branch names are never used as revisions.
+
+### GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comparison/file
+
+Query: `path`, `base`, `head`, optional `srcPath`, optional `changeType`.
+
+Returns file content at the supplied commit SHAs. `base` and `head` must be hex SHAs (`7–40` chars). Binary, oversized, missing, and truncated files are flagged instead of being rendered as text.
+
 | Status | Meaning |
 | --- | --- |
 | 200 | Success |

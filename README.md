@@ -12,7 +12,7 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 ## What works today
 
 - FastAPI backend with structured logging, CORS, `/api/v1/health`, `/api/v1/ready`, and `/api/v1/settings`
-- Bitbucket Data Center 10.2 client for projects, repositories, and pull requests
+- Bitbucket Data Center 10.2 client for projects, repositories, pull requests, and SHA-locked before/after diffs
 - React + Vite + TypeScript dashboard with sidebar, top navigation, and seven workspace pages
 - Environment-based configuration (Pydantic Settings)
 - AI provider **interfaces** for Amazon Bedrock and Strands Agents (stubs)
@@ -25,6 +25,7 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 | --- | --- |
 | Bitbucket REST (projects, repos, PRs) | Data Center 10.2.x |
 | Pull request list and detail UI | Live |
+| PR before/after code comparison | Live (no AI) |
 | PR deep analysis | Not started |
 | Bamboo build ingestion | Not started |
 | Production investigation | Not started |
@@ -115,6 +116,7 @@ Copy `.env.example` to `.env`. Important variables:
 | `BITBUCKET_BASE_URL` | Data Center instance root, e.g. `https://bitbucket.example.com` |
 | `BITBUCKET_TOKEN` | HTTP access token — never logged or returned |
 | `BITBUCKET_USERNAME` | Optional; when set, REST uses Basic `username:token` |
+| `BITBUCKET_MAX_FILE_BYTES` | Skip rendering files larger than this in PR comparison (default 1 MiB) |
 | `BAMBOO_BASE_URL` | Bamboo host (unused until Milestone 3) |
 | `BAMBOO_TOKEN` | Bamboo token — never logged or returned |
 | `AI_PROVIDER` | `bedrock` or `strands` |
