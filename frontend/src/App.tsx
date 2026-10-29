@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Dashboard } from "@/pages/Dashboard";
 import { Repositories } from "@/pages/Repositories";
 import { PullRequests } from "@/pages/PullRequests";
+import { PullRequestDetail } from "@/pages/PullRequestDetail";
 import { PrDeepAnalysis } from "@/pages/PrDeepAnalysis";
 import { BambooBuilds } from "@/pages/BambooBuilds";
 import { ProductionInvestigation } from "@/pages/ProductionInvestigation";
@@ -27,6 +28,10 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/repositories" element={<Repositories />} />
             <Route path="/pull-requests" element={<PullRequests />} />
+            <Route
+              path="/pull-requests/:projectKey/:repositorySlug/:pullRequestId"
+              element={<PullRequestDetail />}
+            />
             <Route path="/pr-analysis" element={<PrDeepAnalysis />} />
             <Route path="/bamboo" element={<BambooBuilds />} />
             <Route path="/production" element={<ProductionInvestigation />} />

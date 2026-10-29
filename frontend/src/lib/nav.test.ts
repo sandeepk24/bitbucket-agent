@@ -26,6 +26,7 @@ describe("navigation", () => {
 
   it("resolves breadcrumbs from the current path", () => {
     expect(navItemForPath("/pr-analysis").label).toBe("PR Deep Analysis");
+    expect(navItemForPath("/pull-requests/DEV/payments/42").label).toBe("Pull Requests");
     expect(navItemForPath("/").label).toBe("Dashboard");
   });
 });
