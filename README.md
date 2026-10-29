@@ -2,7 +2,7 @@
 
 Enterprise DevOps intelligence for Bitbucket repositories, pull requests, Bamboo CI, and production investigation. Amazon Bedrock and Strands Agents will power analysis in a later milestone.
 
-This repository is the **foundation**: a runnable React + FastAPI app, Docker Compose, health checks, and typed provider boundaries. Bitbucket API calls, Bamboo ingestion, and model inference are **not implemented yet**.
+The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access token, discover projects and repositories, and keep tokens out of logs. Bamboo ingestion and AI analysis are **not implemented yet**.
 
 **Repo:** https://github.com/sandeepk24/bitbucket-agent  
 **Author:** [sandeepk24](https://github.com/sandeepk24)
@@ -12,10 +12,10 @@ This repository is the **foundation**: a runnable React + FastAPI app, Docker Co
 ## What works today
 
 - FastAPI backend with structured logging, CORS, `/api/v1/health`, `/api/v1/ready`, and `/api/v1/settings`
+- Bitbucket Data Center 10.2 client (`/api/bitbucket/health`, `/projects`, `/projects/{projectKey}/repos`)
 - React + Vite + TypeScript dashboard with sidebar, top navigation, and seven workspace pages
 - Environment-based configuration (Pydantic Settings)
 - AI provider **interfaces** for Amazon Bedrock and Strands Agents (stubs)
-- Bitbucket and Bamboo client **stubs** that only report whether tokens are configured
 - Docker Compose for local backend + frontend
 - pytest (backend) and Vitest (frontend)
 
@@ -23,7 +23,7 @@ This repository is the **foundation**: a runnable React + FastAPI app, Docker Co
 
 | Capability | Status |
 | --- | --- |
-| Bitbucket REST calls | Not started |
+| Bitbucket REST (projects, repos) | Data Center 10.2.x |
 | Pull request ingestion | Not started |
 | PR deep analysis | Not started |
 | Bamboo build ingestion | Not started |
@@ -66,6 +66,7 @@ uvicorn app.main:app --reload --port 8000
 
 - API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/api/v1/health
+- Bitbucket health: http://localhost:8000/api/bitbucket/health
 - Ready: http://localhost:8000/api/v1/ready
 
 ### Frontend
@@ -111,9 +112,9 @@ Copy `.env.example` to `.env`. Important variables:
 
 | Variable | Purpose |
 | --- | --- |
-| `BITBUCKET_BASE_URL` | Bitbucket API host (unused until Milestone 2) |
-| `BITBUCKET_WORKSPACE` | Workspace slug (unused until Milestone 2) |
-| `BITBUCKET_TOKEN` | Access token — never logged or returned |
+| `BITBUCKET_BASE_URL` | Data Center instance root, e.g. `https://bitbucket.example.com` |
+| `BITBUCKET_TOKEN` | HTTP access token — never logged or returned |
+| `BITBUCKET_USERNAME` | Optional; when set, REST uses Basic `username:token` |
 | `BAMBOO_BASE_URL` | Bamboo host (unused until Milestone 3) |
 | `BAMBOO_TOKEN` | Bamboo token — never logged or returned |
 | `AI_PROVIDER` | `bedrock` or `strands` |
@@ -127,7 +128,7 @@ Copy `.env.example` to `.env`. Important variables:
 | Page | Route | Purpose |
 | --- | --- | --- |
 | Dashboard | `/` | Platform health and foundation status |
-| Repositories | `/repositories` | Bitbucket repository browser (placeholder) |
+| Repositories | `/repositories` | Bitbucket project and repository discovery |
 | Pull Requests | `/pull-requests` | PR inbox (placeholder) |
 | PR Deep Analysis | `/pr-analysis` | AI-assisted review (placeholder) |
 | Bamboo Builds | `/bamboo` | CI build intelligence (placeholder) |

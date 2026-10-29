@@ -1,31 +1,36 @@
 # Architecture
 
-Bitbucket Agent is an enterprise DevOps intelligence console for Bitbucket Cloud / Data Center, pull requests, Bamboo CI, and production investigation. This milestone delivers a runnable platform only.
+Bitbucket Agent is an enterprise DevOps intelligence console for Bitbucket Data Center, pull requests, Bamboo CI, and production investigation.
 
 ```
 ┌─────────────────────────────┐     ┌──────────────────────────────────┐
 │  React + Vite (TypeScript)  │     │  FastAPI (Python 3.12+)          │
 │  Sidebar + top nav + pages  │────▶│  /api/v1/health                  │
-│  TanStack Query             │     │  /api/v1/ready                   │
-└─────────────────────────────┘     │  /api/v1/settings                │
+│  TanStack Query             │     │  /api/bitbucket/health           │
+└─────────────────────────────┘     │  /api/bitbucket/projects         │
+                                    │  /api/bitbucket/.../repos        │
                                     │                                  │
                                     │  providers/                      │
-                                    │    bitbucket  (stub)             │
+                                    │    bitbucket  (DC 10.2 REST)     │
                                     │    bamboo     (stub)             │
                                     │    ai/bedrock (stub)             │
                                     │    ai/strands (stub)             │
                                     └──────────────────────────────────┘
+                                              │
+                                              ▼
+                                    Bitbucket Data Center 10.2.x
 ```
 
 ## Boundaries
 
-| Layer | Responsibility | Out of scope (Milestone 1) |
+| Layer | Responsibility | Out of scope |
 | --- | --- | --- |
-| Frontend | Layout, routing, health display | Live Bitbucket/Bamboo data |
-| API | Health, readiness, sanitized settings | Inference, ingestion |
-| Providers | Typed interfaces + config checks | HTTP to Bitbucket, Bamboo, or Bedrock |
+| Frontend | Layout, routing, project/repo browse | PR analysis, Bamboo, AI |
+| API | Process health plus Bitbucket discovery | Inference |
+| Bitbucket client | PAT auth, retries, pagination | Cloud REST, PR APIs |
+| AI providers | Typed interfaces | InvokeModel / Strands runtime |
 
-Tokens and credentials stay in process environment. They are never logged or returned on API responses.
+Tokens stay in process environment. They are never logged or returned on API responses.
 
 ## Local topology
 

@@ -1,14 +1,14 @@
 # API Reference
 
-Base URL: `http://localhost:8000/api/v1`
-
 Interactive docs: `http://localhost:8000/docs`
 
-All endpoints in this milestone report process health and **configuration presence**. They do not call Bitbucket, Bamboo, Amazon Bedrock, or Strands Agents.
+Tokens and credentials are never included in responses.
 
-## GET /health
+## Process health (`/api/v1`)
 
-Liveness plus configuration flags. Secret values are never included.
+### GET /api/v1/health
+
+Liveness plus configuration flags.
 
 ```json
 {
@@ -22,29 +22,59 @@ Liveness plus configuration flags. Secret values are never included.
 }
 ```
 
-## GET /ready
+### GET /api/v1/ready
 
-Readiness for process orchestration. Returns `200` when the API can serve traffic.
+Returns `200` when the API process can serve traffic.
+
+### GET /api/v1/settings
+
+Non-secret runtime settings. `BITBUCKET_TOKEN` is omitted.
+
+## Bitbucket Data Center (`/api/bitbucket`)
+
+These routes call Bitbucket 10.2.x. See [BITBUCKET.md](./BITBUCKET.md).
+
+### GET /api/bitbucket/health
 
 ```json
 {
-  "status": "ready"
+  "configured": true,
+  "reachable": true,
+  "authenticated": true,
+  "base_url": "https://bitbucket.example.com",
+  "display_name": "Bitbucket",
+  "version": "10.2.8",
+  "compatible": true
 }
 ```
 
-## GET /settings
+`compatible` is true when the remote version starts with `10.2.`.
 
-Non-secret runtime settings (Bitbucket base URL, workspace slug, Bamboo host, AWS region, selected AI provider, model id). Tokens are omitted.
+### GET /api/bitbucket/projects
+
+Paged Bitbucket project discovery, flattened into one list.
+
+### GET /api/bitbucket/projects/{projectKey}/repos
+
+Repositories in a project, including the HTTP clone URL when Bitbucket returns one.
+
+| Status | Meaning |
+| --- | --- |
+| 200 | Success |
+| 404 | Project or resource missing |
+| 502 | Auth failure or Bitbucket unreachable |
+| 503 | `BITBUCKET_BASE_URL` or `BITBUCKET_TOKEN` is not set |
 
 ## GET /
 
-Service metadata used by operators and Compose health probes.
+Service metadata for operators.
 
 ```json
 {
   "name": "Bitbucket Agent",
   "version": "0.1.0",
   "docs": "/docs",
-  "health": "/api/v1/health"
+  "health": "/api/v1/health",
+  "bitbucket_health": "/api/bitbucket/health"
 }
 ```

@@ -14,10 +14,10 @@
 
 ## Milestone 2 — Bitbucket connectivity
 
-- [ ] Authenticated Bitbucket REST client (workspaces, repositories, pull requests)
-- [ ] Workspace-scoped token handling
-- [ ] Repository and pull request list/detail APIs
-- [ ] Frontend repository and PR browsers
+- [x] Authenticated Bitbucket Data Center REST client (HTTP access tokens)
+- [x] Project and repository discovery APIs
+- [ ] Frontend repository browser
+- [ ] Pull request list/detail APIs
 
 ## Milestone 3 — PR intelligence and Bamboo
 
