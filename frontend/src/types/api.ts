@@ -53,6 +53,74 @@ export interface BitbucketRepoList {
   items: BitbucketRepo[];
 }
 
+export type PullRequestState = "OPEN" | "MERGED" | "DECLINED" | "ALL";
+
+export interface BitbucketUser {
+  name: string;
+  display_name: string;
+  email: string | null;
+  slug: string | null;
+}
+
+export interface BitbucketParticipant {
+  user: BitbucketUser;
+  role: string;
+  approved: boolean;
+  status: string;
+}
+
+export interface BitbucketPullRequest {
+  id: number;
+  version: number | null;
+  title: string;
+  description: string | null;
+  state: string;
+  open: boolean;
+  closed: boolean;
+  created_date: number | null;
+  updated_date: number | null;
+  html_url: string | null;
+  author: BitbucketUser | null;
+  reviewers: BitbucketParticipant[];
+  source_branch: string;
+  destination_branch: string;
+  source_commit: string | null;
+  destination_commit: string | null;
+  approved_count: number;
+  reviewer_count: number;
+}
+
+export interface BitbucketCommit {
+  id: string;
+  display_id: string;
+  message: string;
+  author_name: string | null;
+  author_email: string | null;
+  author_timestamp: number | null;
+}
+
+export interface BitbucketFileChange {
+  path: string;
+  src_path: string | null;
+  change_type: string;
+  node_type: string | null;
+  executable: boolean;
+}
+
+export interface BitbucketPullRequestList {
+  project_key: string;
+  repo_slug: string;
+  state: string;
+  count: number;
+  items: BitbucketPullRequest[];
+}
+
+export interface BitbucketPullRequestDetail {
+  pull_request: BitbucketPullRequest;
+  commits: BitbucketCommit[];
+  changes: BitbucketFileChange[];
+}
+
 export interface AppSettings {
   app_name: string;
   app_version: string;

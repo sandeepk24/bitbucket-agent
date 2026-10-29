@@ -4,8 +4,11 @@ import type {
   AppSettings,
   BitbucketHealth,
   BitbucketProjectList,
+  BitbucketPullRequestDetail,
+  BitbucketPullRequestList,
   BitbucketRepoList,
   HealthResponse,
+  PullRequestState,
 } from "@/types/api";
 
 export function useHealth() {
@@ -49,6 +52,38 @@ export function useBitbucketRepos(projectKey: string | null) {
         `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos`
       ),
     enabled: Boolean(projectKey),
+    retry: 1,
+  });
+}
+
+export function useBitbucketPullRequests(
+  projectKey: string | null,
+  repoSlug: string | null,
+  state: PullRequestState
+) {
+  return useQuery<BitbucketPullRequestList>({
+    queryKey: ["bitbucket", "prs", projectKey, repoSlug, state],
+    queryFn: () =>
+      api.get<BitbucketPullRequestList>(
+        `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests?state=${state}`
+      ),
+    enabled: Boolean(projectKey && repoSlug),
+    retry: 1,
+  });
+}
+
+export function useBitbucketPullRequestDetail(
+  projectKey: string | undefined,
+  repoSlug: string | undefined,
+  pullRequestId: string | undefined
+) {
+  return useQuery<BitbucketPullRequestDetail>({
+    queryKey: ["bitbucket", "pr", projectKey, repoSlug, pullRequestId],
+    queryFn: () =>
+      api.get<BitbucketPullRequestDetail>(
+        `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests/${pullRequestId}`
+      ),
+    enabled: Boolean(projectKey && repoSlug && pullRequestId),
     retry: 1,
   });
 }
