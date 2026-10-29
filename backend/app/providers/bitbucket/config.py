@@ -27,6 +27,7 @@ class BitbucketConfig:
     page_limit: int = 100
     max_pages: int = 50
     verify_ssl: bool = True
+    max_file_bytes: int = 1_048_576
 
     @property
     def configured(self) -> bool:
@@ -49,4 +50,5 @@ class BitbucketConfig:
             page_limit=cfg.bitbucket_page_limit,
             max_pages=cfg.bitbucket_max_pages,
             verify_ssl=cfg.bitbucket_verify_ssl,
+            max_file_bytes=cfg.bitbucket_max_file_bytes,
         )

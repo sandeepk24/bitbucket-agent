@@ -9,6 +9,9 @@ Official endpoints used:
 - GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
 - GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/commits
 - GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/changes
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/merge-base
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/diff[/{path}]
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/raw/{path}?at={sha}
 
 Auth follows Bitbucket 10.2 HTTP access tokens: Bearer when no username is
 set, otherwise Basic username:token. Tokens are never logged.
@@ -36,6 +39,7 @@ from app.providers.bitbucket.errors import (
     BitbucketNotFoundError,
     BitbucketUnavailableError,
 )
+from app.providers.bitbucket.files import RawFile, is_binary_payload, require_commit_sha
 
 logger = get_logger(__name__)
 
@@ -160,6 +164,100 @@ class BitbucketClient:
     ) -> list[dict[str, Any]]:
         return await self._paginate(_pr_path(project_key, repo_slug, pull_request_id) + "/changes")
 
+    async def get_pull_request_merge_base(
+        self,
+        project_key: str,
+        repo_slug: str,
+        pull_request_id: int,
+    ) -> dict[str, Any]:
+        payload = await self._get_json(_pr_path(project_key, repo_slug, pull_request_id) + "/merge-base")
+        if not isinstance(payload, dict) or not payload.get("id"):
+            raise BitbucketError("Unexpected merge-base payload")
+        return payload
+
+    async def get_pull_request_diff(
+        self,
+        project_key: str,
+        repo_slug: str,
+        pull_request_id: int,
+        *,
+        path: str | None = None,
+        src_path: str | None = None,
+        since_id: str | None = None,
+        until_id: str | None = None,
+    ) -> dict[str, Any]:
+        diff_path = _pr_path(project_key, repo_slug, pull_request_id) + "/diff"
+        if path:
+            diff_path = f"{diff_path}/{_file_path(path)}"
+        params: dict[str, Any] = {"withComments": "false"}
+        if src_path:
+            params["srcPath"] = src_path
+        if since_id:
+            params["sinceId"] = require_commit_sha(since_id)
+        if until_id:
+            params["untilId"] = require_commit_sha(until_id)
+        payload = await self._get_json(diff_path, params=params)
+        if not isinstance(payload, dict):
+            raise BitbucketError("Unexpected pull request diff payload")
+        return payload
+
+    async def get_raw_file(
+        self,
+        project_key: str,
+        repo_slug: str,
+        path: str,
+        *,
+        at: str,
+    ) -> RawFile:
+        """Read a file at an immutable commit SHA. Branch names are rejected."""
+        key = _validate_project_key(project_key)
+        slug = _validate_repo_slug(repo_slug)
+        revision = require_commit_sha(at)
+        file_path = _file_path(path)
+        encoded = f"projects/{_seg(key)}/repos/{_seg(slug)}/raw/{file_path}"
+        url = f"{self._config.api_root}/{encoded}"
+        headers = {**self._auth_headers(), "Accept": "*/*"}
+        delay = 0.25
+        last_error: Exception | None = None
+
+        if not self._config.configured:
+            raise BitbucketNotConfiguredError()
+
+        for attempt in range(self._config.max_retries + 1):
+            try:
+                async with self._client.stream(
+                    "GET",
+                    url,
+                    headers=headers,
+                    params={"at": revision},
+                ) as response:
+                    if response.status_code in _RETRYABLE_STATUS and attempt < self._config.max_retries:
+                        await response.aclose()
+                        retry_after = _retry_after_seconds(response)
+                        await asyncio.sleep(retry_after if retry_after is not None else _jitter(delay))
+                        delay = min(delay * 2, 4.0)
+                        continue
+                    if response.status_code >= 400:
+                        await response.aread()
+                        try:
+                            self._raise_for_status(response, encoded)
+                        except BitbucketNotFoundError:
+                            return RawFile(path=path, revision=revision, content=None, size=0, missing=True)
+                    return await _read_raw_file(response, path, revision, self._config.max_file_bytes)
+            except _RETRYABLE_EXC as exc:
+                last_error = exc
+                if attempt >= self._config.max_retries:
+                    logger.warning(
+                        "Bitbucket GET %s failed after retries: %s",
+                        encoded,
+                        type(exc).__name__,
+                    )
+                    raise BitbucketUnavailableError() from exc
+                await asyncio.sleep(_jitter(delay))
+                delay = min(delay * 2, 4.0)
+
+        raise BitbucketUnavailableError() from last_error
+
     async def health(self) -> dict[str, Any]:
         result: dict[str, Any] = {
             "configured": self.is_configured(),
@@ -230,12 +328,13 @@ class BitbucketClient:
         method: str,
         path: str,
         params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> httpx.Response:
         if not self._config.configured:
             raise BitbucketNotConfiguredError()
 
         url = f"{self._config.api_root}/{path.lstrip('/')}"
-        headers = self._auth_headers()
+        headers = {**self._auth_headers(), **(headers or {})}
         delay = 0.25
         last_error: Exception | None = None
 
@@ -333,6 +432,42 @@ def _pr_path(project_key: str, repo_slug: str, pull_request_id: int) -> str:
     slug = _validate_repo_slug(repo_slug)
     pr_id = _validate_pr_id(pull_request_id)
     return f"projects/{_seg(key)}/repos/{_seg(slug)}/pull-requests/{pr_id}"
+
+
+def _file_path(path: str) -> str:
+    cleaned = path.strip().lstrip("/")
+    parts = [part for part in cleaned.split("/") if part not in {"", "."}]
+    if not parts or any(part == ".." for part in parts):
+        raise BitbucketError("Invalid file path", status_code=422)
+    return "/".join(quote(part, safe="._-") for part in parts)
+
+
+async def _read_raw_file(response: httpx.Response, path: str, revision: str, max_bytes: int) -> RawFile:
+    size_header = response.headers.get("content-length")
+    declared = int(size_header) if size_header and size_header.isdigit() else None
+    if declared is not None and declared > max_bytes:
+        await response.aclose()
+        return RawFile(path=path, revision=revision, content=None, size=declared, too_large=True)
+
+    chunks: list[bytes] = []
+    total = 0
+    async for chunk in response.aiter_bytes():
+        total += len(chunk)
+        if total > max_bytes:
+            await response.aclose()
+            return RawFile(path=path, revision=revision, content=None, size=total, too_large=True)
+        chunks.append(chunk)
+    body = b"".join(chunks)
+    if is_binary_payload(body, response.headers.get("content-type")):
+        return RawFile(path=path, revision=revision, content=None, size=len(body), binary=True)
+    truncated = "truncated" in (response.headers.get("x-bitbucket-truncated") or "").lower()
+    return RawFile(
+        path=path,
+        revision=revision,
+        content=body.decode("utf-8", errors="replace"),
+        size=len(body),
+        truncated=truncated,
+    )
 
 
 def _retry_after_seconds(response: httpx.Response) -> float | None:

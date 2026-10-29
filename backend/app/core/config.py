@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     bitbucket_page_limit: int = Field(default=100, ge=1, le=1000)
     bitbucket_max_pages: int = Field(default=50, ge=1, le=200)
     bitbucket_verify_ssl: bool = True
+    bitbucket_max_file_bytes: int = Field(default=1_048_576, ge=16_384, le=10_485_760)
 
     bamboo_base_url: str = ""
     bamboo_token: str = ""
