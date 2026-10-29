@@ -14,6 +14,10 @@ from app.schemas.bitbucket import (
     project_from_rest,
     repo_from_rest,
 )
+from app.schemas.comparison import (
+    PullRequestComparisonResponse,
+    PullRequestFileComparisonResponse,
+)
 from app.schemas.pull_requests import (
     BitbucketPullRequestDetailResponse,
     BitbucketPullRequestListResponse,
@@ -21,6 +25,7 @@ from app.schemas.pull_requests import (
     commit_from_rest,
     pull_request_from_rest,
 )
+from app.services.comparison import build_comparison, build_file_comparison
 
 router = APIRouter(prefix="/api/bitbucket", tags=["bitbucket"])
 
@@ -32,6 +37,11 @@ PrStateQuery = Annotated[
     Literal["OPEN", "MERGED", "DECLINED", "ALL"],
     Query(description="Bitbucket PR state filter. Defaults to OPEN."),
 ]
+CommitShaQuery = Annotated[
+    str,
+    Query(min_length=7, max_length=40, pattern=r"^[0-9a-fA-F]{7,40}$"),
+]
+FilePathQuery = Annotated[str, Query(min_length=1, max_length=1024)]
 
 
 @router.get("/health", response_model=BitbucketHealthResponse)
@@ -96,4 +106,45 @@ async def get_pull_request(
         pull_request=pull_request_from_rest(raw_pr),
         commits=[commit_from_rest(raw) for raw in raw_commits],
         changes=[change_from_rest(raw) for raw in raw_changes],
+    )
+
+
+@router.get(
+    "/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comparison",
+    response_model=PullRequestComparisonResponse,
+)
+async def get_pull_request_comparison(
+    project_key: ProjectKeyPath,
+    repo_slug: RepoSlugPath,
+    pull_request_id: PullRequestIdPath,
+    client: BitbucketDep,
+) -> PullRequestComparisonResponse:
+    return await build_comparison(client, project_key, repo_slug, pull_request_id)
+
+
+@router.get(
+    "/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comparison/file",
+    response_model=PullRequestFileComparisonResponse,
+)
+async def get_pull_request_file_comparison(
+    project_key: ProjectKeyPath,
+    repo_slug: RepoSlugPath,
+    pull_request_id: PullRequestIdPath,
+    client: BitbucketDep,
+    path: FilePathQuery,
+    base: CommitShaQuery,
+    head: CommitShaQuery,
+    src_path: Annotated[str | None, Query(alias="srcPath", max_length=1024)] = None,
+    change_type: Annotated[str, Query(alias="changeType", max_length=16)] = "MODIFY",
+) -> PullRequestFileComparisonResponse:
+    return await build_file_comparison(
+        client,
+        project_key,
+        repo_slug,
+        pull_request_id,
+        path=path,
+        src_path=src_path,
+        change_type=change_type,
+        base_sha=base,
+        head_sha=head,
     )
