@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      BACKEND_LOG_LEVEL: ${BACKEND_LOG_LEVEL:-info}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:8080","http://localhost:5173"]}
+      BITBUCKET_BASE_URL: ${BITBUCKET_BASE_URL:-https://api.bitbucket.org/2.0}
+      BITBUCKET_WORKSPACE: ${BITBUCKET_WORKSPACE:-}
+      BITBUCKET_TOKEN: ${BITBUCKET_TOKEN:-}
+      BAMBOO_BASE_URL: ${BAMBOO_BASE_URL:-}
+      BAMBOO_TOKEN: ${BAMBOO_TOKEN:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AI_PROVIDER: ${AI_PROVIDER:-bedrock}
+      BEDROCK_ENABLED: ${BEDROCK_ENABLED:-false}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-anthropic.claude-3-5-sonnet-20241022-v2:0}
+      STRANDS_ENABLED: ${STRANDS_ENABLED:-false}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
