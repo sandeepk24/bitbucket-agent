@@ -1,0 +1,1 @@
+"""Bamboo CI client stubs."""
