@@ -5,6 +5,10 @@ Official endpoints used:
 - GET /rest/api/latest/application-properties
 - GET /rest/api/latest/projects
 - GET /rest/api/latest/projects/{projectKey}/repos
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/commits
+- GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/changes
 
 Auth follows Bitbucket 10.2 HTTP access tokens: Bearer when no username is
 set, otherwise Basic username:token. Tokens are never logged.
@@ -18,6 +22,7 @@ import random
 import re
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -44,6 +49,8 @@ _RETRYABLE_EXC = (
     httpx.RemoteProtocolError,
 )
 _PROJECT_KEY = re.compile(r"^~?[A-Za-z0-9._-]+$")
+_REPO_SLUG = re.compile(r"^[A-Za-z0-9._-]+$")
+_PR_STATES = frozenset({"OPEN", "MERGED", "DECLINED", "ALL"})
 _COMPATIBLE_PREFIX = "10.2."
 
 
@@ -109,7 +116,49 @@ class BitbucketClient:
 
     async def list_repos(self, project_key: str) -> list[dict[str, Any]]:
         key = _validate_project_key(project_key)
-        return await self._paginate(f"projects/{key}/repos")
+        return await self._paginate(f"projects/{_seg(key)}/repos")
+
+    async def list_pull_requests(
+        self,
+        project_key: str,
+        repo_slug: str,
+        *,
+        state: str = "OPEN",
+    ) -> list[dict[str, Any]]:
+        key = _validate_project_key(project_key)
+        slug = _validate_repo_slug(repo_slug)
+        return await self._paginate(
+            f"projects/{_seg(key)}/repos/{_seg(slug)}/pull-requests",
+            params={"state": _validate_pr_state(state), "withAttributes": "true"},
+        )
+
+    async def get_pull_request(
+        self,
+        project_key: str,
+        repo_slug: str,
+        pull_request_id: int,
+    ) -> dict[str, Any]:
+        path = _pr_path(project_key, repo_slug, pull_request_id)
+        payload = await self._get_json(path)
+        if not isinstance(payload, dict):
+            raise BitbucketError("Unexpected pull request payload")
+        return payload
+
+    async def list_pull_request_commits(
+        self,
+        project_key: str,
+        repo_slug: str,
+        pull_request_id: int,
+    ) -> list[dict[str, Any]]:
+        return await self._paginate(_pr_path(project_key, repo_slug, pull_request_id) + "/commits")
+
+    async def list_pull_request_changes(
+        self,
+        project_key: str,
+        repo_slug: str,
+        pull_request_id: int,
+    ) -> list[dict[str, Any]]:
+        return await self._paginate(_pr_path(project_key, repo_slug, pull_request_id) + "/changes")
 
     async def health(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -144,13 +193,18 @@ class BitbucketClient:
         )
         return result
 
-    async def _paginate(self, path: str) -> list[dict[str, Any]]:
+    async def _paginate(
+        self,
+        path: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         values: list[dict[str, Any]] = []
         start = 0
+        extra = dict(params or {})
         for _page in range(self._config.max_pages):
             payload = await self._get_json(
                 path,
-                params={"start": start, "limit": self._config.page_limit},
+                params={"start": start, "limit": self._config.page_limit, **extra},
             )
             page_values = payload.get("values") if isinstance(payload, dict) else None
             if not isinstance(page_values, list):
@@ -248,6 +302,37 @@ def _validate_project_key(project_key: str) -> str:
     if not _PROJECT_KEY.fullmatch(key):
         raise BitbucketError("Invalid Bitbucket project key", status_code=422)
     return key
+
+
+def _validate_repo_slug(repo_slug: str) -> str:
+    slug = repo_slug.strip()
+    if not _REPO_SLUG.fullmatch(slug):
+        raise BitbucketError("Invalid Bitbucket repository slug", status_code=422)
+    return slug
+
+
+def _validate_pr_state(state: str) -> str:
+    value = state.strip().upper()
+    if value not in _PR_STATES:
+        raise BitbucketError("Invalid pull request state", status_code=422)
+    return value
+
+
+def _validate_pr_id(pull_request_id: int) -> int:
+    if pull_request_id < 1:
+        raise BitbucketError("Invalid pull request id", status_code=422)
+    return pull_request_id
+
+
+def _seg(value: str) -> str:
+    return quote(value, safe="~._-")
+
+
+def _pr_path(project_key: str, repo_slug: str, pull_request_id: int) -> str:
+    key = _validate_project_key(project_key)
+    slug = _validate_repo_slug(repo_slug)
+    pr_id = _validate_pr_id(pull_request_id)
+    return f"projects/{_seg(key)}/repos/{_seg(slug)}/pull-requests/{pr_id}"
 
 
 def _retry_after_seconds(response: httpx.Response) -> float | None:
