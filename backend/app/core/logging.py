@@ -4,6 +4,28 @@ import logging
 import sys
 
 from app.core.config import settings
+from app.core.secrets import redact_secrets
+
+
+class CredentialRedactingFilter(logging.Filter):
+    """Strip Bearer/Basic tokens from log records before they hit a handler."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        extras = (settings.bitbucket_token, settings.bamboo_token)
+        if isinstance(record.msg, str):
+            record.msg = redact_secrets(record.msg, *extras)
+        if record.args:
+            if isinstance(record.args, dict):
+                record.args = {
+                    key: redact_secrets(val, *extras) if isinstance(val, str) else val
+                    for key, val in record.args.items()
+                }
+            else:
+                record.args = tuple(
+                    redact_secrets(arg, *extras) if isinstance(arg, str) else arg
+                    for arg in record.args
+                )
+        return True
 
 
 def setup_logging() -> None:
@@ -16,6 +38,10 @@ def setup_logging() -> None:
         handlers=[logging.StreamHandler(sys.stdout)],
         force=True,
     )
+    redact = CredentialRedactingFilter()
+    logging.getLogger().addFilter(redact)
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(redact)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)

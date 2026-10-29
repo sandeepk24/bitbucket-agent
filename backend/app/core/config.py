@@ -22,10 +22,18 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:8080"]
 
-    bitbucket_base_url: str = "https://api.bitbucket.org/2.0"
+    # Bitbucket Data Center instance root, not the Cloud API host.
+    # Example: https://bitbucket.example.com or https://bitbucket.example.com/bitbucket
+    bitbucket_base_url: str = ""
     bitbucket_workspace: str = ""
     bitbucket_token: str = ""
+    bitbucket_username: str = ""
     bitbucket_api_timeout: int = Field(default=30, ge=5, le=120)
+    bitbucket_connect_timeout: float = Field(default=5.0, ge=1.0, le=30.0)
+    bitbucket_max_retries: int = Field(default=3, ge=0, le=8)
+    bitbucket_page_limit: int = Field(default=100, ge=1, le=1000)
+    bitbucket_max_pages: int = Field(default=50, ge=1, le=200)
+    bitbucket_verify_ssl: bool = True
 
     bamboo_base_url: str = ""
     bamboo_token: str = ""

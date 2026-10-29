@@ -35,7 +35,7 @@ async def test_settings_omits_secrets(client):
     data = resp.json()
     assert "bitbucket_token" not in data
     assert "bamboo_token" not in data
-    assert data["bitbucket_base_url"]
+    assert "bitbucket_base_url" in data
     assert data["bedrock_enabled"] is False
     assert data["strands_enabled"] is False
 
