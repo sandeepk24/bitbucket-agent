@@ -10,6 +10,9 @@ export default defineConfig({
       "@": import.meta.dirname + "/src",
     },
   },
+  optimizeDeps: {
+    include: ["monaco-editor", "@monaco-editor/react"],
+  },
   server: {
     port: 5173,
     proxy: {

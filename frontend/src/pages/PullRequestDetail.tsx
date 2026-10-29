@@ -4,8 +4,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Badge } from "@/components/common/Badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/common/Card";
+
 import { Spinner } from "@/components/common/Spinner";
 import { PullRequestStateBadge } from "@/components/bitbucket/PullRequestStateBadge";
+import { PullRequestComparison } from "@/components/bitbucket/PullRequestComparison";
 import { useBitbucketPullRequestDetail } from "@/api/queries";
 import { formatEpoch } from "@/lib/pull-requests";
 
@@ -147,40 +149,11 @@ export function PullRequestDetail() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Changed files</CardTitle>
-              <CardDescription>{detail.data?.changes.length ?? 0} paths</CardDescription>
-            </CardHeader>
-            <CardContent className="overflow-x-auto p-0">
-              {(detail.data?.changes.length ?? 0) === 0 ? (
-                <p className="p-6 text-sm text-muted-foreground">No file changes returned.</p>
-              ) : (
-                <table className="min-w-full text-left text-sm">
-                  <thead className="border-b border-border text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Change</th>
-                      <th className="px-4 py-3 font-medium">Path</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.data?.changes.map((change) => (
-                      <tr key={change.path} className="border-b border-border last:border-0">
-                        <td className="px-4 py-3">
-                          <Badge variant={change.change_type === "DELETE" ? "destructive" : "outline"}>
-                            {change.change_type.toLowerCase()}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs">
-                          {change.src_path ? `${change.src_path} → ${change.path}` : change.path}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </CardContent>
-          </Card>
+          <PullRequestComparison
+            projectKey={projectKey}
+            repoSlug={repositorySlug}
+            pullRequestId={pullRequestId}
+          />
         </>
       )}
     </div>

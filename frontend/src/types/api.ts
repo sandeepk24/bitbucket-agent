@@ -121,6 +121,63 @@ export interface BitbucketPullRequestDetail {
   changes: BitbucketFileChange[];
 }
 
+export interface ComparisonRevision {
+  sha: string;
+  display_id: string | null;
+  role: string;
+}
+
+export interface FileRevisionContent {
+  path: string;
+  revision: string;
+  content: string | null;
+  size: number;
+  binary: boolean;
+  too_large: boolean;
+  missing: boolean;
+  truncated: boolean;
+}
+
+export interface ComparisonFileSummary {
+  path: string;
+  src_path: string | null;
+  change_type: string;
+  additions: number;
+  deletions: number;
+  before_lines: number[];
+  after_lines: number[];
+  binary: boolean;
+  truncated_diff: boolean;
+  hunks_available: boolean;
+}
+
+export interface PullRequestComparison {
+  project_key: string;
+  repo_slug: string;
+  pull_request_id: number;
+  base: ComparisonRevision;
+  head: ComparisonRevision;
+  target: ComparisonRevision | null;
+  commit_count: number;
+  truncated_diff: boolean;
+  files: ComparisonFileSummary[];
+}
+
+export interface PullRequestFileComparison {
+  path: string;
+  src_path: string | null;
+  change_type: string;
+  base_sha: string;
+  head_sha: string;
+  additions: number;
+  deletions: number;
+  before_lines: number[];
+  after_lines: number[];
+  truncated_diff: boolean;
+  before: FileRevisionContent;
+  after: FileRevisionContent;
+}
+
 export interface AppSettings {
   app_name: string;
   app_version: string;

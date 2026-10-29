@@ -8,6 +8,8 @@ import type {
   BitbucketPullRequestList,
   BitbucketRepoList,
   HealthResponse,
+  PullRequestComparison,
+  PullRequestFileComparison,
   PullRequestState,
 } from "@/types/api";
 
@@ -84,6 +86,62 @@ export function useBitbucketPullRequestDetail(
         `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests/${pullRequestId}`
       ),
     enabled: Boolean(projectKey && repoSlug && pullRequestId),
+    retry: 1,
+  });
+}
+
+export function useBitbucketPullRequestComparison(
+  projectKey: string | undefined,
+  repoSlug: string | undefined,
+  pullRequestId: string | undefined
+) {
+  return useQuery<PullRequestComparison>({
+    queryKey: ["bitbucket", "pr-comparison", projectKey, repoSlug, pullRequestId],
+    queryFn: () =>
+      api.get<PullRequestComparison>(
+        `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests/${pullRequestId}/comparison`
+      ),
+    enabled: Boolean(projectKey && repoSlug && pullRequestId),
+    retry: 1,
+  });
+}
+
+export function useBitbucketPullRequestFileComparison(
+  projectKey: string | undefined,
+  repoSlug: string | undefined,
+  pullRequestId: string | undefined,
+  file: { path: string; src_path: string | null; change_type: string } | null,
+  baseSha: string | undefined,
+  headSha: string | undefined
+) {
+  return useQuery<PullRequestFileComparison>({
+    queryKey: [
+      "bitbucket",
+      "pr-file",
+      projectKey,
+      repoSlug,
+      pullRequestId,
+      file?.path,
+      file?.src_path,
+      file?.change_type,
+      baseSha,
+      headSha,
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        path: file?.path ?? "",
+        changeType: file?.change_type ?? "MODIFY",
+        base: baseSha ?? "",
+        head: headSha ?? "",
+      });
+      if (file?.src_path) {
+        params.set("srcPath", file.src_path);
+      }
+      return api.get<PullRequestFileComparison>(
+        `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests/${pullRequestId}/comparison/file?${params.toString()}`
+      );
+    },
+    enabled: Boolean(projectKey && repoSlug && pullRequestId && file && baseSha && headSha),
     retry: 1,
   });
 }
