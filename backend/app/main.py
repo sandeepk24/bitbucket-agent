@@ -41,7 +41,8 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description=(
             "Enterprise DevOps intelligence for Bitbucket Data Center. "
-            "Project and repository discovery is live; AI analysis is not implemented yet."
+            "Enterprise DevOps intelligence for Bitbucket Data Center, including SHA-locked "
+            "PR comparison and deep analysis."
         ),
         version=settings.app_version,
         docs_url="/docs",

@@ -5,8 +5,10 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Path, Query
 
-from app.api.deps import get_bitbucket_client
+from app.api.deps import get_ai_provider_dep, get_bitbucket_client
+from app.providers.ai.base import AIProvider
 from app.providers.bitbucket.client import BitbucketClient
+from app.schemas.analysis import PullRequestAnalysisResponse
 from app.schemas.bitbucket import (
     BitbucketHealthResponse,
     BitbucketProjectListResponse,
@@ -25,11 +27,13 @@ from app.schemas.pull_requests import (
     commit_from_rest,
     pull_request_from_rest,
 )
+from app.services.analysis import analyze_pull_request
 from app.services.comparison import build_comparison, build_file_comparison
 
 router = APIRouter(prefix="/api/bitbucket", tags=["bitbucket"])
 
 BitbucketDep = Annotated[BitbucketClient, Depends(get_bitbucket_client)]
+AIDep = Annotated[AIProvider, Depends(get_ai_provider_dep)]
 ProjectKeyPath = Annotated[str, Path(alias="projectKey", min_length=1, max_length=128)]
 RepoSlugPath = Annotated[str, Path(alias="repositorySlug", min_length=1, max_length=128)]
 PullRequestIdPath = Annotated[int, Path(alias="pullRequestId", ge=1)]
@@ -148,3 +152,17 @@ async def get_pull_request_file_comparison(
         base_sha=base,
         head_sha=head,
     )
+
+
+@router.get(
+    "/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/analysis",
+    response_model=PullRequestAnalysisResponse,
+)
+async def get_pull_request_analysis(
+    project_key: ProjectKeyPath,
+    repo_slug: RepoSlugPath,
+    pull_request_id: PullRequestIdPath,
+    client: BitbucketDep,
+    provider: AIDep,
+) -> PullRequestAnalysisResponse:
+    return await analyze_pull_request(client, provider, project_key, repo_slug, pull_request_id)
