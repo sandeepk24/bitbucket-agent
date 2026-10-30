@@ -7,6 +7,28 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 **Repo:** https://github.com/sandeepk24/bitbucket-agent  
 **Author:** [sandeepk24](https://github.com/sandeepk24)
 
+## Screenshots
+
+### Dashboard
+
+![Dashboard with API health, workspace modules, and runtime settings](docs/screenshots/dashboard.png)
+
+### Repositories
+
+![Repositories workspace for Bitbucket Data Center projects](docs/screenshots/repositories.png)
+
+### Pull requests
+
+![Pull request workspace with repository selection empty state](docs/screenshots/pull-requests.png)
+
+### PR Deep Analysis
+
+![PR Deep Analysis workspace for SHA-locked review](docs/screenshots/pr-analysis.png)
+
+### Settings
+
+![Settings page showing non-secret runtime configuration](docs/screenshots/settings.png)
+
 ---
 
 ## What works today
@@ -40,7 +62,7 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 bitbucket-agent/
 ├── frontend/     React + Vite + TypeScript UI
 ├── backend/      FastAPI + Pydantic v2 API
-├── docs/         Architecture, API, implementation plan
+├── docs/         Architecture, API, screenshots, implementation plan
 └── docker/       Dockerfiles and nginx config
 ```
 
