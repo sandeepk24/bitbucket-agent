@@ -2,7 +2,7 @@
 
 Enterprise DevOps intelligence for Bitbucket repositories, pull requests, Bamboo CI, and production investigation. Amazon Bedrock and Strands Agents will power analysis in a later milestone.
 
-The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access token, discover projects and repositories, and keep tokens out of logs. Bamboo ingestion and AI analysis are **not implemented yet**.
+The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access token, discover projects and repositories, compare PR revisions, and run PR deep analysis. Bamboo ingestion is **not implemented yet**. Live Bedrock/Strands inference is optional; static findings still run when the model is off.
 
 **Repo:** https://github.com/sandeepk24/bitbucket-agent  
 **Author:** [sandeepk24](https://github.com/sandeepk24)
@@ -12,7 +12,7 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 ## What works today
 
 - FastAPI backend with structured logging, CORS, `/api/v1/health`, `/api/v1/ready`, and `/api/v1/settings`
-- Bitbucket Data Center 10.2 client for projects, repositories, pull requests, and SHA-locked before/after diffs
+- Bitbucket Data Center 10.2 client for projects, repositories, pull requests, SHA-locked before/after diffs, and PR deep analysis
 - React + Vite + TypeScript dashboard with sidebar, top navigation, and seven workspace pages
 - Environment-based configuration (Pydantic Settings)
 - AI provider **interfaces** for Amazon Bedrock and Strands Agents (stubs)
@@ -25,8 +25,8 @@ The backend can connect to **Bitbucket Data Center 10.2.x** with an HTTP access 
 | --- | --- |
 | Bitbucket REST (projects, repos, PRs) | Data Center 10.2.x |
 | Pull request list and detail UI | Live |
-| PR before/after code comparison | Live (no AI) |
-| PR deep analysis | Not started |
+| PR before/after code comparison | Live |
+| PR deep analysis | Live (static + optional model) |
 | Bamboo build ingestion | Not started |
 | Production investigation | Not started |
 | Bedrock `InvokeModel` | Interface only |
@@ -132,7 +132,7 @@ Copy `.env.example` to `.env`. Important variables:
 | Dashboard | `/` | Platform health and foundation status |
 | Repositories | `/repositories` | Bitbucket project and repository discovery |
 | Pull Requests | `/pull-requests` | Open, merged, and declined PRs |
-| PR Deep Analysis | `/pr-analysis` | AI-assisted review (placeholder) |
+| PR Deep Analysis | `/pr-analysis` | Findings, risk, and SHA-locked diffs |
 | Bamboo Builds | `/bamboo` | CI build intelligence (placeholder) |
 | Production Investigation | `/production` | Incident investigation (placeholder) |
 | Settings | `/settings` | Non-secret runtime configuration |

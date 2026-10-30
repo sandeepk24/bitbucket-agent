@@ -22,7 +22,9 @@
 
 ## Milestone 3 — PR intelligence and Bamboo
 
-- [ ] PR Deep Analysis (diff summaries, risk signals) via Bedrock / Strands
+- [x] PR Deep Analysis (diff summaries, risk signals) via Bedrock / Strands
+  - Static confirmed findings and hypothetical runtime risks ship without a live model
+  - Model enrichment uses the AI provider `generate` interface when configured
 - [ ] Bamboo build ingestion and failure clustering
 - [ ] Insight APIs and UI
 

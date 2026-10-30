@@ -78,6 +78,16 @@ Query: `path`, `base`, `head`, optional `srcPath`, optional `changeType`.
 
 Returns file content at the supplied commit SHAs. `base` and `head` must be hex SHAs (`7–40` chars). Binary, oversized, missing, and truncated files are flagged instead of being rendered as text.
 
+### GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/analysis
+
+Deep analysis of a pull request at locked base/head SHAs.
+
+- `summary`, `risk_summary`, and `production_impact` describe the overall change
+- `findings` are grouped by `severity` and tagged `kind=confirmed` (static evidence in the diff) or `kind=hypothetical` (runtime/production risk)
+- `progress` lists completed stages; `model.error` is set when inference is unavailable
+- `unsupported_files` covers binary, oversized, truncated, and capped paths
+- Evidence quotes are redacted for the Bitbucket token
+
 | Status | Meaning |
 | --- | --- |
 | 200 | Success |

@@ -54,6 +54,7 @@ Personal projects use a `~` key prefix (`~jsmith`), which the client allows.
 | `GET /api/bitbucket/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{id}` | PR + `/commits` + `/changes` |
 | `GET .../pull-requests/{id}/comparison` | merge-base + PR + `/commits` + `/changes` + `/diff?sinceId=&untilId=` |
 | `GET .../pull-requests/{id}/comparison/file` | `/raw/{path}?at={sha}` at locked base and head SHAs |
+| `GET .../pull-requests/{id}/analysis` | Comparison + static review + optional model generate |
 
 `state` accepts `OPEN`, `MERGED`, `DECLINED`, or `ALL`. Reviewers and approval status (`APPROVED`, `UNAPPROVED`, `NEEDS_WORK`) are taken from the PR `reviewers` array. Source and destination branches are `fromRef.displayId` and `toRef.displayId`.
 
@@ -63,6 +64,5 @@ Comparisons always pin `at`, `sinceId`, and `untilId` to commit SHAs. If merge-b
 
 ## Not in this change
 
-- AI review / PR Deep Analysis
 - Bamboo
-- Amazon Bedrock / Strands analysis
+- Live Amazon Bedrock InvokeModel / Strands runtime (analysis still returns static findings)
