@@ -11,7 +11,10 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["monaco-editor", "@monaco-editor/react"],
+    include: ["@monaco-editor/react"],
+  },
+  worker: {
+    format: "es",
   },
   server: {
     port: 5173,
