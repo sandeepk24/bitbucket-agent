@@ -47,7 +47,15 @@ export function PullRequestDetail() {
             title={`#${pr.id} ${pr.title}`}
             description={`${projectKey}/${repositorySlug} · ${pr.source_branch} → ${pr.destination_branch}`}
           >
-            <PullRequestStateBadge state={pr.state} />
+            <div className="flex items-center gap-2">
+              <PullRequestStateBadge state={pr.state} />
+              <Link
+                to={`/pr-analysis?project=${encodeURIComponent(projectKey ?? "")}&repo=${encodeURIComponent(repositorySlug ?? "")}&pr=${pr.id}`}
+                className="inline-flex h-8 items-center rounded-md border border-border px-3 text-sm hover:bg-accent"
+              >
+                Deep analysis
+              </Link>
+            </div>
           </PageHeader>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

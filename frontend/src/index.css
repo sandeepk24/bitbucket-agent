@@ -47,3 +47,13 @@ body {
 #root {
   min-height: 100vh;
 }
+
+.analysis-line-hit {
+  background: color-mix(in oklab, var(--color-primary) 18%, transparent) !important;
+}
+
+.analysis-line-gutter {
+  background: var(--color-primary);
+  width: 3px !important;
+  margin-left: 3px;
+}

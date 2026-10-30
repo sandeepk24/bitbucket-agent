@@ -7,9 +7,18 @@ interface CodeDiffViewerProps {
   original: string;
   modified: string;
   sideBySide: boolean;
+  highlightBeforeLines?: number[];
+  highlightAfterLines?: number[];
 }
 
-export function CodeDiffViewer({ path, original, modified, sideBySide }: CodeDiffViewerProps) {
+export function CodeDiffViewer({
+  path,
+  original,
+  modified,
+  sideBySide,
+  highlightBeforeLines = [],
+  highlightAfterLines = [],
+}: CodeDiffViewerProps) {
   return (
     <DiffEditor
       height="100%"
@@ -26,6 +35,26 @@ export function CodeDiffViewer({ path, original, modified, sideBySide }: CodeDif
         automaticLayout: true,
         renderIndicators: true,
         ignoreTrimWhitespace: false,
+      }}
+      onMount={(editor, monaco) => {
+        const originalEditor = editor.getOriginalEditor();
+        const modifiedEditor = editor.getModifiedEditor();
+        const lineHits = (lines: number[]) =>
+          lines.map((line) => ({
+            range: new monaco.Range(line, 1, line, 1),
+            options: {
+              isWholeLine: true,
+              className: "analysis-line-hit",
+              linesDecorationsClassName: "analysis-line-gutter",
+            },
+          }));
+        originalEditor.deltaDecorations([], lineHits(highlightBeforeLines));
+        modifiedEditor.deltaDecorations([], lineHits(highlightAfterLines));
+        if (highlightAfterLines[0]) {
+          modifiedEditor.revealLineInCenter(highlightAfterLines[0]);
+        } else if (highlightBeforeLines[0]) {
+          originalEditor.revealLineInCenter(highlightBeforeLines[0]);
+        }
       }}
     />
   );

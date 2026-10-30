@@ -8,6 +8,7 @@ import type {
   BitbucketPullRequestList,
   BitbucketRepoList,
   HealthResponse,
+  PullRequestAnalysis,
   PullRequestComparison,
   PullRequestFileComparison,
   PullRequestState,
@@ -143,5 +144,22 @@ export function useBitbucketPullRequestFileComparison(
     },
     enabled: Boolean(projectKey && repoSlug && pullRequestId && file && baseSha && headSha),
     retry: 1,
+  });
+}
+
+export function usePullRequestAnalysis(
+  projectKey: string | null,
+  repoSlug: string | null,
+  pullRequestId: string | null
+) {
+  return useQuery<PullRequestAnalysis>({
+    queryKey: ["bitbucket", "pr-analysis", projectKey, repoSlug, pullRequestId],
+    queryFn: () =>
+      api.get<PullRequestAnalysis>(
+        `/api/bitbucket/projects/${encodeURIComponent(projectKey ?? "")}/repos/${encodeURIComponent(repoSlug ?? "")}/pull-requests/${pullRequestId}/analysis`
+      ),
+    enabled: Boolean(projectKey && repoSlug && pullRequestId),
+    retry: 1,
+    staleTime: 60_000,
   });
 }

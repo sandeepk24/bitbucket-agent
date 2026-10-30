@@ -178,6 +178,84 @@ export interface PullRequestFileComparison {
   after: FileRevisionContent;
 }
 
+export type AnalysisSeverity = "critical" | "high" | "medium" | "low" | "info";
+export type FindingKind = "confirmed" | "hypothetical";
+export type FindingSource = "static" | "model" | "heuristic";
+
+export interface FindingEvidence {
+  path: string;
+  revision: string;
+  line: number | null;
+  quote: string | null;
+}
+
+export interface AnalysisFinding {
+  id: string;
+  title: string;
+  severity: AnalysisSeverity;
+  kind: FindingKind;
+  source: FindingSource;
+  path: string;
+  src_path: string | null;
+  change_type: string;
+  component: string;
+  before_lines: number[];
+  after_lines: number[];
+  evidence: FindingEvidence[];
+  risk: string;
+  recommended_fix: string;
+  production_impact: string;
+}
+
+export interface AnalysisStage {
+  id: string;
+  label: string;
+  status: "pending" | "running" | "done" | "error" | "skipped";
+  detail: string | null;
+}
+
+export interface UnsupportedFile {
+  path: string;
+  reason: string;
+  detail: string;
+}
+
+export interface AffectedComponent {
+  name: string;
+  file_count: number;
+  finding_count: number;
+  paths: string[];
+}
+
+export interface AnalysisModelStatus {
+  provider: string;
+  available: boolean;
+  used: boolean;
+  error: string | null;
+}
+
+export interface PullRequestAnalysis {
+  status: "complete" | "partial";
+  project_key: string;
+  repo_slug: string;
+  pull_request_id: number;
+  title: string;
+  source_branch: string;
+  destination_branch: string;
+  base_sha: string;
+  head_sha: string;
+  commit_count: number;
+  summary: string;
+  production_impact: string;
+  risk_summary: string;
+  progress: AnalysisStage[];
+  model: AnalysisModelStatus;
+  components: AffectedComponent[];
+  files: ComparisonFileSummary[];
+  unsupported_files: UnsupportedFile[];
+  findings: AnalysisFinding[];
+}
+
 export interface AppSettings {
   app_name: string;
   app_version: string;

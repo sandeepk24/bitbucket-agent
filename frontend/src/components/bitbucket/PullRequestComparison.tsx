@@ -18,6 +18,10 @@ interface PullRequestComparisonProps {
   projectKey: string | undefined;
   repoSlug: string | undefined;
   pullRequestId: string | undefined;
+  selectedPath?: string | null;
+  onSelectedPathChange?: (path: string) => void;
+  highlightBeforeLines?: number[];
+  highlightAfterLines?: number[];
 }
 
 function changeVariant(changeType: string): "success" | "destructive" | "outline" | "warning" {
@@ -37,18 +41,28 @@ export function PullRequestComparison({
   projectKey,
   repoSlug,
   pullRequestId,
+  selectedPath,
+  onSelectedPathChange,
+  highlightBeforeLines,
+  highlightAfterLines,
 }: PullRequestComparisonProps) {
   const comparison = useBitbucketPullRequestComparison(projectKey, repoSlug, pullRequestId);
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [internalPath, setInternalPath] = useState<string | null>(null);
   const [sideBySide, setSideBySide] = useState(true);
+  const activePath = selectedPath ?? internalPath;
 
   const files = comparison.data?.files ?? [];
   const selected = useMemo<ComparisonFileSummary | null>(() => {
     if (files.length === 0) {
       return null;
     }
-    return files.find((file) => file.path === selectedPath) ?? files[0];
-  }, [files, selectedPath]);
+    return files.find((file) => file.path === activePath) ?? files[0];
+  }, [files, activePath]);
+
+  function selectPath(path: string) {
+    setInternalPath(path);
+    onSelectedPathChange?.(path);
+  }
 
   const fileQuery = useBitbucketPullRequestFileComparison(
     projectKey,
@@ -62,7 +76,7 @@ export function PullRequestComparison({
   const blockReason = file ? diffBlockReason(file) : "ready";
 
   return (
-    <Card>
+    <Card id="pr-comparison">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -124,7 +138,7 @@ export function PullRequestComparison({
                     <li key={item.path}>
                       <button
                         type="button"
-                        onClick={() => setSelectedPath(item.path)}
+                        onClick={() => selectPath(item.path)}
                         className={cn(
                           "flex w-full flex-col gap-1 px-4 py-3 text-left text-sm hover:bg-accent",
                           active && "bg-accent"
@@ -200,10 +214,13 @@ export function PullRequestComparison({
                   </div>
                 ) : (
                   <CodeDiffViewer
+                    key={`${file.path}:${(highlightAfterLines ?? []).join(",")}:${(highlightBeforeLines ?? []).join(",")}`}
                     path={file.path}
                     original={file.before.content ?? ""}
                     modified={file.after.content ?? ""}
                     sideBySide={sideBySide}
+                    highlightBeforeLines={highlightBeforeLines}
+                    highlightAfterLines={highlightAfterLines}
                   />
                 )}
               </div>
