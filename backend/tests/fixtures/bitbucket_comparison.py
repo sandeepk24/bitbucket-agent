@@ -15,6 +15,8 @@ DELETED_PATH = "backend/app/legacy/auth.py"
 RENAME_SRC = "backend/app/util/names.py"
 RENAME_DEST = "backend/app/util/display.py"
 BINARY_PATH = "frontend/public/logo.png"
+LOGIN_PATH = "backend/app/api/login.py"
+LOGIN_AFTER = 'password = "hunter2"\neval(user_input)\n'
 
 MERGE_BASE = {
     "id": MERGE_BASE_SHA,
